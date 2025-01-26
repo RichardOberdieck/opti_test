@@ -26,5 +26,3 @@ jobs:
         run: pipx install hatch
       - name: Run tests
         run: hatch run test:base
-      - name: Test with python ${{ matrix.python-version }}
-        run: uv run --frozen pytest
