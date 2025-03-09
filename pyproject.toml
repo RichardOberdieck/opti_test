@@ -21,6 +21,13 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
+  "pydantic",
+  "pandas",
+  "plotly",
+  "click",
+  "numpy",
+  "shapely",
+  "streamlit"
 ]
 dynamic = ["version"]
 
