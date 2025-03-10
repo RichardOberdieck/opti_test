@@ -1,15 +1,14 @@
-import gurobipy as gp
-from gurobipy import GRB
+import pyoptinterface as poi
+from poi.VariableDomain import Binary, Continuous
+from pyoptinterface import highs
 
 from .model_data import ModelData
-
-Σ = gp.quicksum
 
 
 class ModelBuilder:
     def __init__(self, model_data: ModelData):
         self.model_data = model_data
-        self.model = gp.Model("CableProblem")
+        self.model = highs.Model()
 
     def solve(self):
         self._define_variables()
@@ -18,10 +17,18 @@ class ModelBuilder:
         return self._optimize()
 
     def _define_variables(self):
-        self.install = self.model.addVars(self.model_data.connections, vtype=GRB.BINARY, name="Install")
-        self.is_link = self.model.addVars(self.model_data.links, vtype=GRB.BINARY, name="Is_Link_Built")
-        self.flow = self.model.addVars(self.model_data.links, name="Flow")
-        self.is_cable_built = self.model.addVars(self.model_data.cable_types, vtype=GRB.BINARY, name="Is_Cable_Built")
+        self.install = {
+            c: self.model.add_variable(domain=Binary, name=f"install_{c}") for c in self.model_data.connections
+        }
+        self.is_link = {
+            link: self.model.add_variable(domain=Binary, name=f"is_link_{link}_built") for link in self.model_data.links
+        }
+        self.flow = {
+            f: self.model.add_variable(lb=0, domain=Continuous, name=f"flow_in_link_{f}") for f in self.model_data.links
+        }
+        self.is_cable_built = {
+            c: self.model.add_variable(domain=Binary, name=f"is_cable_{c}_built") for c in self.model_data.cable_types
+        }
 
     def _map_variables(self):
         return self.install, self.is_link, self.flow, self.is_cable_built
@@ -29,44 +36,48 @@ class ModelBuilder:
     def _define_constraints(self):
         x, y, f, z = self._map_variables()  # For readability
 
-        self.model.addConstrs(
-            (Σ(x[c] for c in self.model_data.get_connections_for_link(link)) == y[link] for link in y),
-            name="Connect x to y",
-        )
-
-        self.model.addConstrs(
-            (
-                Σ(f[o] for o in self.model_data.get_outgoing_from_unit(u))
-                == Σ(f[i] for i in self.model_data.get_incoming_into_unit(u)) + self.model_data.parameters["MW"]
-                for u in self.model_data.turbines
-            ),
-            name="Flow balance",
-        )
-
-        self.model.addConstrs(
-            (
+        for link in y:
+            self.model.add_linear_constraint(
+                sum(x[c] for c in self.model_data.get_connections_for_link(link)) - y[link],
+                poi.Eq,
+                0,
+                name=f"Connections for link {link}",
+            )
+            self.model.add_linear_constraint(
                 f[link]
-                <= Σ(c.cable_type.max_mw_on_cable * x[c] for c in self.model_data.get_connections_for_link(link))
-                for link in y
-            ),
-            name="Limit flow per cable type",
-        )
+                - sum(c.cable_type.max_mw_on_cable * x[c] for c in self.model_data.get_connections_for_link(link)),
+                poi.Leq,
+                0,
+                name=f"Limit flow for link {link}",
+            )
 
-        self.model.addConstrs(
-            (Σ(y[link] for link in self.model_data.get_outgoing_from_unit(u)) == 1 for u in self.model_data.turbines),
-            name="Enforce link being built",
-        )
+        for u in self.model_data.turbines:
+            self.model.add_linear_constraint(
+                sum(f[o] for o in self.model_data.get_outgoing_from_unit(u))
+                - sum(f[i] for i in self.model_data.get_incoming_into_unit(u)),
+                poi.Eq,
+                self.model_data.parameters["MW"],
+                name=f"Flow balance for {u}",
+            )
+            self.model.add_linear_constraint(
+                sum(y[link] for link in self.model_data.get_outgoing_from_unit(u)),
+                poi.Eq,
+                1,
+                name=f"Enforce link being built for {u}",
+            )
 
-        self.model.addConstrs(
-            (
-                x[c] <= z[cable_type]
-                for cable_type in z
-                for c in self.model_data.get_connections_with_same_cable_type(cable_type)
-            ),
-            name="Enable cable type selection",
-        )
+        for cable_type in z:
+            for c in self.model_data.get_connections_with_same_cable_type(cable_type):
+                self.model.add_linear_constraint(
+                    x[c] - z[cable_type],
+                    poi.Leq,
+                    0,
+                    name=f"Enable cable type selection for cable {cable_type} and connection {c}",
+                )
 
-        self.model.addConstr(z.sum() <= self.model_data.parameters["CableNumber"], name="Limit number of cables")
+        self.model.add_linear_constraint(
+            sum(z.values()) <= self.model_data.parameters["CableNumber"], name="Limit number of cables"
+        )
 
         self._add_non_crossing_constraints()
 
@@ -76,17 +87,16 @@ class ModelBuilder:
         for num1, link1 in enumerate(y):
             for num2, link2 in enumerate(y):
                 if num2 > num1 and link1.check_if_crossing(link2):
-                    self.model.addConstr(y[link1] + y[link2] <= 1, name=f"Non crossing for {link1},{link2}")
+                    self.model.add_linear_constraint(
+                        y[link1] + y[link2], poi.Leq, 1, name=f"Non crossing for {link1},{link2}"
+                    )
 
     def _define_objective_function(self):
         x, _, _, _ = self._map_variables()  # For readability
 
-        self.model.setObjective(Σ(c.get_cost() * x[c] for c in x))
+        self.model.set_objective(sum(c.get_cost() * x[c] for c in x), poi.ObjectiveSense.Minimize)
 
     def _optimize(self):
-        x, _, f, _ = self._map_variables()  # For readability
-
-        self.model.Params.Cuts = 2
+        x, _, _, _ = self._map_variables()  # For readability
         self.model.optimize()
-
-        return [c for c in x if x[c].x > 0.5]
+        return [c for c in x if self.model.get_value(x[c]) > 0.5]

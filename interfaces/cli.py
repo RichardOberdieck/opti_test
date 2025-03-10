@@ -11,7 +11,8 @@ def run(input_file: str, output_file: str):
     array_cable_problem = ArrayCableProblem.validate_json(json.loads(input_file))
     array_cable_problem.create_layout()
     if array_cable_problem.layout is not None:
-        array_cable_problem.layout.model_dump_json()
+        with open(output_file, "w") as file:
+            file.write(array_cable_problem.layout.model_dump_json())
 
 
 if __name__ == "__main__":

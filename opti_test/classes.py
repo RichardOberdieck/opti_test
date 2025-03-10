@@ -1,9 +1,6 @@
-from opti_test.model_builder import ModelBuilder
 from pydantic import BaseModel
 import numpy as np
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 from shapely.geometry import LineString
 
 
@@ -18,6 +15,9 @@ class Unit(BaseModel):
     def __str__(self):
         return self.name
 
+    def __hash__(self):
+        return 100 * hash(self.x) - hash(self.y)
+
     def is_turbine(self):
         return self.name[:3] == "WTG"
 
@@ -30,6 +30,9 @@ class CableType(BaseModel):
     def __str__(self):
         return str(self.name)
 
+    def __hash__(self):
+        return hash(self.name) + hash(self.max_mw_on_cable) + 5 * hash(self.cost_per_km)
+
 
 class Link(BaseModel):
     origin: Unit
@@ -40,6 +43,9 @@ class Link(BaseModel):
 
     def __str__(self):
         return str(self.origin) + "->" + str(self.destination)
+
+    def __hash__(self):
+        return hash(self.origin) + 5 * hash(self.destination)
 
     def get_distance_in_km(self):
         return np.sqrt((self.origin.x - self.destination.x) ** 2 + (self.origin.y - self.destination.y) ** 2) / 1000
@@ -56,8 +62,8 @@ class Link(BaseModel):
 def _convert_link_to_line_string(link: Link) -> LineString:
     return LineString(
         [
-            (link.origin.coordinate.easting, link.origin.coordinate.northing),
-            (link.destination.coordinate.easting, link.destination.coordinate.northing),
+            (link.origin.x, link.origin.y),
+            (link.destination.x, link.destination.y),
         ]
     )
 
@@ -69,6 +75,9 @@ class Connection(BaseModel):
     def __str__(self):
         return str(self.link) + "_" + str(self.cable_type)
 
+    def __hash__(self):
+        return hash(self.link) + 15 * hash(self.cable_type)
+
     def get_cost(self):
         return self.link.get_distance_in_km() * self.cable_type.cost_per_km
 
@@ -76,52 +85,12 @@ class Connection(BaseModel):
 class Layout(BaseModel):
     connections: list[Connection]
 
-
-class ArrayCableProblem(BaseModel):
-    units: list[Unit]
-    cable_types: list[CableType]
-    settings: dict[str, str | float]
-    layout: Layout | None = None
-
-    def create_layout(self):
-        self.layout = ModelBuilder(self.connections).solve()
-
-    def write_to_dataframe(self):
+    def to_dataframe(self):
         columns = ["Origin", "Destination", "CableType"]
-        if self.layout is None:
-            return pd.DataFrame(columns=columns)
 
-        data = [[c.link.origin.name, c.link.destination.name, c.cable_type.name] for c in self.layout]
+        data = [[c.link.origin.name, c.link.destination.name, c.cable_type.name] for c in self.connections]
         return pd.DataFrame(data=data, columns=columns)
 
-    def plot(self, show: bool = True):
-        df = self._create_dataframe_for_units()
-        fig = px.scatter(df, x="Easting", y="Northing")
-
-        if self.layout is not None:
-            self._add_layout_to_plot(fig)
-
-        if show:
-            fig.show()
-
-        return fig
-
-    def _create_dataframe_for_units(self):
-        columns = ["Name", "Easting", "Northing"]
-        data = [[u.name, u.coordinate.easting, u.coordinate.northing] for u in self.units]
-
-        return pd.DataFrame(data=data, columns=columns)
-
-    def _add_layout_to_plot(self, fig):
-        for c in self.layout:
-            fig.add_trace(
-                go.Scatter(
-                    x=[c.link.origin.coordinate.x, c.link.destination.coordinate.x],
-                    y=[c.link.origin.coordinate.y, c.link.destination.coordinate.y],
-                    line=dict(color="royalblue", width=float(c.cable_type.name)),
-                )
-            )
-
-    def write_solution_to_excel(self, filename: str):
-        df = self.write_to_dataframe()
+    def to_excel(self, filename: str):
+        df = self.to_dataframe()
         df.to_excel(filename)

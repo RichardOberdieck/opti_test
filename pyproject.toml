@@ -27,7 +27,8 @@ dependencies = [
   "click",
   "numpy",
   "shapely",
-  "streamlit"
+  "streamlit",
+  "pyoptinterface[highs]"
 ]
 dynamic = ["version"]
 
