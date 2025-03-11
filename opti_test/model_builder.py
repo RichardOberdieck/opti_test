@@ -1,16 +1,16 @@
 import pyoptinterface as poi
-from poi.VariableDomain import Binary, Continuous
-from pyoptinterface import highs
+from pyoptinterface import highs, VariableDomain
 
-from .model_data import ModelData
+from .model_data import ModelData, Parameters
 
 
 class ModelBuilder:
-    def __init__(self, model_data: ModelData):
+    def __init__(self, model_data: ModelData, parameters: Parameters):
         self.model_data = model_data
+        self.parameters = parameters
         self.model = highs.Model()
 
-    def solve(self):
+    def solve(self) -> list | None:
         self._define_variables()
         self._define_constraints()
         self._define_objective_function()
@@ -18,16 +18,20 @@ class ModelBuilder:
 
     def _define_variables(self):
         self.install = {
-            c: self.model.add_variable(domain=Binary, name=f"install_{c}") for c in self.model_data.connections
+            c: self.model.add_variable(domain=VariableDomain.Binary, name=f"install_{c}")
+            for c in self.model_data.connections
         }
         self.is_link = {
-            link: self.model.add_variable(domain=Binary, name=f"is_link_{link}_built") for link in self.model_data.links
+            link: self.model.add_variable(domain=VariableDomain.Binary, name=f"is_link_{link}_built")
+            for link in self.model_data.links
         }
         self.flow = {
-            f: self.model.add_variable(lb=0, domain=Continuous, name=f"flow_in_link_{f}") for f in self.model_data.links
+            f: self.model.add_variable(lb=0, domain=VariableDomain.Continuous, name=f"flow_in_link_{f}")
+            for f in self.model_data.links
         }
         self.is_cable_built = {
-            c: self.model.add_variable(domain=Binary, name=f"is_cable_{c}_built") for c in self.model_data.cable_types
+            c: self.model.add_variable(domain=VariableDomain.Binary, name=f"is_cable_{c}_built")
+            for c in self.model_data.cable_types
         }
 
     def _map_variables(self):
@@ -56,7 +60,7 @@ class ModelBuilder:
                 sum(f[o] for o in self.model_data.get_outgoing_from_unit(u))
                 - sum(f[i] for i in self.model_data.get_incoming_into_unit(u)),
                 poi.Eq,
-                self.model_data.parameters["MW"],
+                self.parameters.mw_produced_per_turbine,
                 name=f"Flow balance for {u}",
             )
             self.model.add_linear_constraint(
@@ -76,7 +80,7 @@ class ModelBuilder:
                 )
 
         self.model.add_linear_constraint(
-            sum(z.values()) <= self.model_data.parameters["CableNumber"], name="Limit number of cables"
+            sum(z.values()) <= self.parameters.max_number_of_cable_types, name="Limit number of cables"
         )
 
         self._add_non_crossing_constraints()
@@ -99,4 +103,7 @@ class ModelBuilder:
     def _optimize(self):
         x, _, _, _ = self._map_variables()  # For readability
         self.model.optimize()
-        return [c for c in x if self.model.get_value(x[c]) > 0.5]
+        try:
+            return [c for c in x if self.model.get_value(x[c]) > 0.5]
+        except RuntimeError:  # Error code from highs if no solution available
+            return None

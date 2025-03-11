@@ -3,6 +3,11 @@ from pydantic import BaseModel
 from opti_test.classes import CableType, Connection, Link, Unit
 
 
+class Parameters(BaseModel):
+    mw_produced_per_turbine: float
+    max_number_of_cable_types: int
+
+
 class ModelData(BaseModel):
     links: set[Link]
     connections: set[Connection]
