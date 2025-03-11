@@ -6,7 +6,7 @@ So why is it worth talking about? Because often, we only test a small part of al
 
 My guess is no. For me, it's a hard no (also, I don't have a Mercedes). I want every nut and bolt of my imaginary Mercedes to be stress tested way beyond anything I will ever encounter in real life.
 
-The same is true for software. It may not put your life at risk if it malfunctions (although [that is not unheard of]()), but just consider every piece of software you interact with on a daily basis. Your expectation is that it runs correctly. But how can you be sure? Because we test.
+The same is true for software. It may not put your life at risk if it malfunctions (although [that is not unheard of](https://barrgroup.com/sites/default/files/KillerApps_Barr_OFFICIAL.pdf)), but just consider every piece of software you interact with on a daily basis. Your expectation is that it runs correctly. But how can you be sure? Because we test.
 
 ## Testing software is easy
 
@@ -16,4 +16,4 @@ So testing software is infinitely easier than testing hardware. The only reason 
 
 I hope I convinced you of the fact that you should prioritize it, let's now tackle the "how-to".
 
-Very few people will argue that testing is bad. So why don't we do more of it?
+[Go to Principles of testing](./principles.md)

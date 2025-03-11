@@ -19,10 +19,10 @@
 
 Was the TL,DR; not enough? Then let's dive in :)
 - [Introduction](./introduction.md): Why is testing powerful? Can it really work for optimization applications?
-- [Principles of testing](./principles.md): What is a unit, integration and performance test? What makes a test good? What is a property-based test?
+- [Principles of testing](./principles_of_testing.md): What is a unit, integration and performance test? What makes a test good? What is a property-based test?
 - [Examples for unit testing](./unit-tests.md): How to think about unit tests for optimization code, based on a few example from the code in the repository.
 - [Examples for performance testing](./performance-tests.md): A small performance testing setup for the code in the repository.
 
 ## Liked what you read?
 
-Contribute! Leave a star on Github! Give me a shout on [Blesky]() or [LinkedIn]()! Check out my [website](https://oberdieck.dk).
+Contribute! Leave a star on [Github](https://github.com/RichardOberdieck/opti_test)! Give me a shout on [bsky](https://bsky.app/profile/richardoberdieck.bsky.social) or [LinkedIn](https://www.linkedin.com/in/oberdieck/)! Check out my [website](https://oberdieck.dk).
