@@ -1,27 +1,6 @@
-# opti_test
-This repo contains the code relating to the "Testing Optimization Code" tutorial.
+# Testing optimization code
 
-## The code
-The application is an "array cable layout" problem, where wind turbines ("WTGs") have to be connected to an offshore substation ("OSS"). This is a relevant problem in the offshore wind industry. For a detailed study on the topic, check out [Martina Fischetti's thesis](https://orbit.dtu.dk/files/158908591/PhDThesis.pdf).
-
-> This code uses [hatch](https://hatch.pypa.io) as a project management tool.
-
-## How to run it
-There is a command-line interface as well as a small streamlit app. To use the CLI, run:
-
-```
-hatch run cli:run --input_file=tests/test_cases/small.json
-```
-
-To use the app, run:
-
-```
-hatch run app:run
-```
-
-## How is this about testing?
-This code serves as a base of discussion around testing optimization code. My TL,DR; is this:
-
+## TL,DR;
 - I differentiate between **unit** and **performance** tests: unit tests assess correctness, performance tests assess speed
 
 ### Unit testing
@@ -35,6 +14,14 @@ This code serves as a base of discussion around testing optimization code. My TL
 - If performance matters, then **performance testing is as important as unit testing**.
 - The same patterns as in unit testing apply: **arrange**, **act**, **assert**. For performance tests, it can be useful to also record performance metrics over time, such as time, objective function value etc. A simple database can be a valuable friend.
 - Performance testing gets easier when an API or CLI is available. Writing them is easy, and they save a lot of time.
+
+## Learn more
+
+Was the TL,DR; not enough? Then let's dive in :)
+- [Introduction](./introduction.md): Why is testing powerful? Can it really work for optimization applications?
+- [Principles of testing](./principles_of_testing.md): What is a unit, integration and performance test? What makes a test good? What is a property-based test?
+- [Examples for unit testing](./unit-tests.md): How to think about unit tests for optimization code, based on a few example from the code in the repository.
+- [Examples for performance testing](./performance-tests.md): A small performance testing setup for the code in the repository.
 
 ## Liked what you read?
 
