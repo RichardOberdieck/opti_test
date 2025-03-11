@@ -19,10 +19,11 @@ jobs:
           python-version: "3.13"
       - name: Install Hatch
         run: pipx install hatch
-      - name: Update git remote
+      - name: Deploy docs
         run: |
           git remote rm origin
           git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/RichardOberdieck/opti_test.git"
+          hatch run docs:deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Deploy docs
