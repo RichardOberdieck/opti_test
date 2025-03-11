@@ -26,3 +26,5 @@ jobs:
           hatch run docs:deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy docs
+        run: hatch run docs:deploy
