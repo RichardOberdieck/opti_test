@@ -27,4 +27,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Deploy docs
         run: hatch run docs:deploy
-        
