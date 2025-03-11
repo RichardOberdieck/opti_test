@@ -24,7 +24,6 @@ dependencies = [
   "pydantic",
   "pandas",
   "plotly",
-  "click",
   "numpy",
   "shapely",
   "streamlit",
@@ -49,6 +48,12 @@ include = [
 ]
 
 [project.optional-dependencies]
+app = [
+  "streamlit"
+]
+cli = [
+  "click"
+]
 test = [
   "pytest",
   "pytest-cov",
@@ -74,6 +79,18 @@ code_check = "pre-commit run --all-files"
 
 [[tool.hatch.envs.test.matrix]]
 python = ["3.11", "3.12", "3.13"]
+
+[tool.hatch.envs.app]
+dependencies = ["opti_test[app]"]
+
+[tool.hatch.envs.app.scripts]
+run = "streamlit run interfaces/app.py"
+
+[tool.hatch.envs.cli]
+dependencies = ["opti_test[app]"]
+
+[tool.hatch.envs.cli.scripts]
+run = "python -m interfaces.cli {args}"
 
 [tool.coverage.run]
 branch = true

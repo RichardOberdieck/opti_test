@@ -80,14 +80,15 @@ Instead of testing a specific case, we test a specific property. An example:
 
 > When I run my function `multiply_by_2(x)`, is the result divisible by 2?
 
-This works very well for optimization models:
+This works well for optimization models:
 
 > Does the solution always connect all turbines?
 > Do I get `None` if the problem is infeasible?
 > Do I ever exceed the max number of cable types?
 
-Caveat:
-This **only** works with small instances in a somewhat reasonable time
+In other words: **does the solution follow what the equations should encode?**
+
+Caveat: This **only** works with small instances in a somewhat reasonable time
 
 
 ---

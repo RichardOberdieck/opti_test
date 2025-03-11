@@ -1,5 +1,6 @@
+import json
+from opti_test.array_cable_problem import ArrayCableProblem
 import streamlit as st
-from opti_test.layout_data import read_excel
 
 
 def main():
@@ -8,19 +9,20 @@ def main():
     option = st.sidebar.radio(" ", ("Application", "Documentation"))
 
     if option == "Application":
-        uploaded_file = st.file_uploader("Get input file (.xlsx)", type="xlsx", encoding=None)
+        uploaded_file = st.file_uploader("Get input file (.json)", type="json")
         if uploaded_file is not None:
-            cable_problem = read_excel(uploaded_file)
-            st.write(cable_problem.plot(False))
+            data = json.load(uploaded_file)
+            array_cable_problem = ArrayCableProblem(**data)
+            st.write(array_cable_problem.plot(False))
             is_optimize = st.button("Optimize")
             if is_optimize:
-                cable_problem.solve()
+                array_cable_problem.create_layout()
                 st.header("Layout")
-                st.write(cable_problem.plot(False))
+                st.write(array_cable_problem.plot(False))
 
     if option == "Documentation":
-        fo = open("doc/notes.md", "r")
-        st.write(fo.read())
+        with open("docs/index.md", "r") as file:
+            st.write(file.read())
 
 
 if __name__ == "__main__":
