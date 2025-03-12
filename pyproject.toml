@@ -54,6 +54,9 @@ app = [
 cli = [
   "click"
 ]
+notebook = [
+  "jupyter"
+]
 test = [
   "pytest",
   "pytest-cov",
@@ -92,6 +95,12 @@ dependencies = ["opti_test[app]"]
 
 [tool.hatch.envs.cli.scripts]
 run = "python -m interfaces.cli {args}"
+
+[tool.hatch.envs.notebook]
+dependencies = ["opti_test[notebook]"]
+
+[tool.hatch.envs.notebook.scripts]
+run = "jupyter notebook"
 
 [tool.coverage.run]
 branch = true
