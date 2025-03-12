@@ -9,13 +9,13 @@ jobs:
     name: Deploy docs
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main
-        uses: actions/checkout@v2
-
+      - uses: actions/checkout@v4
+        token: ${{ secrets.DOC_BUILD }}
+      - name: Install the latest version of uv and set the python version
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - name: Install Hatch
+        run: pipx install hatch
       - name: Deploy docs
-        uses: mhausenblas/mkdocs-deploy-gh-pages@master
-        # Or use mhausenblas/mkdocs-deploy-gh-pages@nomaterial to build without the mkdocs-material theme
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONFIG_FILE: mkdocs.yml
-          
+        run: hatch run docs:deploy
