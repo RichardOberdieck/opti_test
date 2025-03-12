@@ -76,6 +76,7 @@ dependencies = ["opti_test[test]"]
 [tool.hatch.envs.test.scripts]
 base = "pytest {args}"
 code_check = "pre-commit run --all-files"
+performance = "python tests/performance.py"
 
 [[tool.hatch.envs.test.matrix]]
 python = ["3.11", "3.12", "3.13"]
