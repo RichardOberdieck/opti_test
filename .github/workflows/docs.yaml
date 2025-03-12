@@ -1,30 +1,21 @@
-name: Docs
-
+name: Publish docs via GitHub Pages
 on:
   push:
-    branches: [ "main" ]
-
-permissions:
-  contents: read
-
+    branches:
+      - main
 
 jobs:
-  test:
+  build:
+    name: Deploy docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install the latest version of uv and set the python version
-        uses: astral-sh/setup-uv@v5
-        with:
-          python-version: "3.13"
-      - name: Install Hatch
-        run: pipx install hatch
+      - name: Checkout main
+        uses: actions/checkout@v2
+
       - name: Deploy docs
-        run: |
-          git remote rm origin
-          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/RichardOberdieck/opti_test.git"
-          hatch run docs:deploy
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        # Or use mhausenblas/mkdocs-deploy-gh-pages@nomaterial to build without the mkdocs-material theme
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Deploy docs
-        run: hatch run docs:deploy
+          CONFIG_FILE: mkdocs.yml
+          
