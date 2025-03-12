@@ -1,15 +1,12 @@
-name: Docs
-
+name: Publish docs via GitHub Pages
 on:
   push:
-    branches: [ "main" ]
-
-permissions:
-  contents: read
-
+    branches:
+      - main
 
 jobs:
-  test:
+  build:
+    name: Deploy docs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
