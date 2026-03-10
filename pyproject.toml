@@ -74,7 +74,13 @@ docs = [
 installer = "uv"
 
 [tool.hatch.envs.test]
-dependencies = ["opti_test[test]"]
+features = ["test"]
+extra-dependencies = [
+  "pytest",
+  "pytest-cov",
+  "pre-commit",
+  "hypothesis"
+]
 
 [tool.hatch.envs.test.scripts]
 base = "pytest {args}"
